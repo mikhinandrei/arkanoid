@@ -15,6 +15,7 @@ SCALE = 20
 
 WIDTH = SCALE * (M+1)
 HEIGHT = SCALE * (N+1)
+SPEED = 0.07
 
 epsilon = 0.00001
 
@@ -50,16 +51,19 @@ class PrizeBrick():
 
 class Ball():
     global epsilon
+    global SPEED
 
     def __init__(self):
         self.dead = 0
         self.direction = "down"
         self.x = M//2
         self.y = N//2
+        self.traectory_x = 0
+        self.traectory_y = -1
         self.radius = N/40
         self.draw_circle()
         self.move_circle()
-        self.traectory = [1, 0, -M//2]
+
 
     def draw_circle(self):
         amount_segments = 50
@@ -75,17 +79,15 @@ class Ball():
 
     def move_circle(self):
         if self.dead == 0:
-            if self.direction == "down":
-                if self.y - 0.8 <= epsilon:
-                    print("You die")
-                    self.dead = 1
-                else:
-                    self.y -= 0.1
-            if self.direction == "up":
-                if (M + 1 - self.radius) - self.y <= epsilon:
-                    self.direction = "down"
-                else:
-                    self.y += 0.1
+            if self.y - 0.8 <= epsilon:
+                print("You die")
+                self.dead = 1
+            else:
+                self.x += self.traectory_x * SPEED
+                self.y += self.traectory_y * SPEED
+            if (M + 1 - self.radius) - self.y <= epsilon:
+                self.traectory_y = -1
+
 
 
 class Platform():
@@ -123,7 +125,8 @@ class Platform():
         if self.ball.y - (1 + self.ball.radius) <= epsilon:
             if self.borders[0] <= self.ball.x <= self.borders[1]:
                 self.reflect_ball()
-                self.ball.direction = "up"
+        if (self.ball.x - self.ball.radius <= epsilon) or (M - (self.ball.x + self.ball.radius - 1) <= epsilon):
+            self.reflect_ball_from_the_wall()
         time.sleep(0.01)
         if self.ball.dead == 0:
             glFlush()
@@ -133,8 +136,12 @@ class Platform():
         point1 = [self.x, 0]
         point2 = [self.ball.x, self.ball.y]
         line_vector = [point2[0] - point1[0], point2[1] - point1[1]]
-        self.ball.traectory = [line_vector[1], 0 - line_vector[0], self.x * line_vector]
+        self.ball.traectory_x = line_vector[0]
+        self.ball.traectory_y = line_vector[1]
         print(line_vector)
+
+    def reflect_ball_from_the_wall(self):
+        self.ball.traectory_x *= -1
 
 
 if __name__ == '__main__':
